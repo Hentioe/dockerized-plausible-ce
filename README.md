@@ -23,7 +23,7 @@
 #### 1. Clone this repository
 
 ```console
-$ git clone -b v3.2.0 --single-branch https://github.com/plausible/community-edition plausible-ce
+$ git clone -b customized --single-branch https://github.com/Hentioe/dockerized-plausible-ce.git plausible-ce
 Cloning into 'plausible-ce'...
 
 $ cd plausible-ce
@@ -62,10 +62,9 @@ $ echo "HTTPS_PORT=443" >> .env
 
 $ cat > compose.override.yml << EOF
 services:
-    plausible:
-        ports:
-            - 80:80
-            - 443:443
+  server:
+    ports:
+      - 8080:80
 EOF
 ```
 

@@ -1,5 +1,7 @@
 *
+!.env.example
 !compose.yml
+!compose.override.yml
 !clickhouse/logs.xml
 !clickhouse/ipv4-only.xml
 !clickhouse/low-resources.xml
@@ -7,3 +9,4 @@
 !README.md
 !LICENSE
 !.gitignore
+!setup.sh

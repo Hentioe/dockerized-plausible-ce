@@ -1,21 +1,21 @@
 services:
-  plausible_db:
+  db:
     image: postgres:16-alpine
     restart: always
     volumes:
-      - db-data:/var/lib/postgresql/data
+      - ./db-data:/var/lib/postgresql/data
     environment:
       - POSTGRES_PASSWORD=postgres
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
       start_period: 1m
 
-  plausible_events_db:
+  events_db:
     image: clickhouse/clickhouse-server:24.12-alpine
     restart: always
     volumes:
-      - event-data:/var/lib/clickhouse
-      - event-logs:/var/log/clickhouse-server
+      - ./event-data:/var/lib/clickhouse
+      - ./event-logs:/var/log/clickhouse-server
       - ./clickhouse/logs.xml:/etc/clickhouse-server/config.d/logs.xml:ro
       # This makes ClickHouse bind to IPv4 only, since Docker doesn't enable IPv6 in bridge networks by default.
       # Fixes "Listen [::]:9000 failed: Address family for hostname not supported" warnings.
@@ -38,17 +38,17 @@ services:
         ]
       start_period: 1m
 
-  plausible:
+  server:
     image: ghcr.io/plausible/community-edition:v3.2.0
     restart: always
     command: sh -c "/entrypoint.sh db createdb && /entrypoint.sh db migrate && /entrypoint.sh run"
     depends_on:
-      plausible_db:
+      db:
         condition: service_healthy
-      plausible_events_db:
+      events_db:
         condition: service_healthy
     volumes:
-      - plausible-data:/var/lib/plausible
+      - ./plausible-data:/var/lib/plausible
     ulimits:
       nofile:
         soft: 65535
@@ -67,8 +67,8 @@ services:
       - HTTP_PORT
       - HTTPS_PORT
       # databases: https://github.com/plausible/community-edition/wiki/configuration#database
-      - DATABASE_URL
-      - CLICKHOUSE_DATABASE_URL
+      - DATABASE_URL=postgres://postgres:postgres@db:5432/plausible_db
+      - CLICKHOUSE_DATABASE_URL=http://events_db:8123/plausible_events_db
       # Google: https://github.com/plausible/community-edition/wiki/configuration#google
       - GOOGLE_CLIENT_ID
       - GOOGLE_CLIENT_SECRET
@@ -92,9 +92,3 @@ services:
       - MAILGUN_BASE_URI
       - MANDRILL_API_KEY
       - SENDGRID_API_KEY
-
-volumes:
-  db-data:
-  event-data:
-  event-logs:
-  plausible-data:
